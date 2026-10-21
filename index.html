@@ -1,1 +1,1189 @@
-Hello
+<!DOCTYPE html>
+<html lang="th" class="h-full bg-slate-900 text-slate-100">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Blood Bank & Transfusion Science Virtual Lab</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter & Sarabun -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Sarabun', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        blood: {
+                            50: '#fff1f2',
+                            100: '#ffe4e6',
+                            500: '#e11d48',
+                            600: '#e11d48',
+                            700: '#be123c',
+                            800: '#9f1239',
+                            900: '#881337',
+                            950: '#4c0519',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Custom Customizations */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #e11d48;
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.75);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .glow-red {
+            box-shadow: 0 0 20px rgba(225, 29, 72, 0.25);
+        }
+    </style>
+</head>
+<body class="h-full flex flex-col font-sans overflow-x-hidden antialiased selection:bg-blood-600 selection:text-white">
+
+    <!-- Header Navigation -->
+    <header class="bg-slate-950 border-b border-slate-800 sticky top-0 z-30 px-4 lg:px-6 py-3 flex flex-wrap justify-between items-center gap-4">
+        <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-blood-700 to-rose-500 flex items-center justify-center text-white shadow-lg glow-red">
+                <i class="fa-solid font-bold fa-vial-circle-check text-xl"></i>
+            </div>
+            <div>
+                <h1 class="text-lg lg:text-xl font-bold bg-gradient-to-r from-white via-slate-200 to-rose-400 bg-clip-text text-transparent">
+                    Blood Bank Transfusion Virtual Lab
+                </h1>
+                <p class="text-xs text-slate-400">การจำลองปฏิกิริยา Serology & Antibody Identification สำหรับเคสซับซ้อน</p>
+            </div>
+        </div>
+
+        <!-- Quick Stats / Status Header -->
+        <div class="flex items-center space-x-2 sm:space-x-4 text-xs">
+            <div class="bg-slate-900 border border-slate-800 rounded-lg px-3 py-1.5 flex items-center space-x-2">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-slate-400">สถานะระบบ:</span>
+                <span class="text-emerald-400 font-medium">พร้อมจำลองผล</span>
+            </div>
+            <button id="btn-open-mission" class="bg-gradient-to-r from-blood-700 to-rose-600 hover:from-blood-600 hover:to-rose-500 text-white font-medium px-3.5 py-1.5 rounded-lg shadow-md transition-all flex items-center space-x-2 border border-rose-500/30">
+                <i class="fa-solid fa-bullseye text-amber-300"></i>
+                <span>ภารกิจท้าทาย (Mission)</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-4 p-4 lg:p-6 max-w-[1800px] w-full mx-auto">
+        
+        <!-- LEFT PANEL: Controls & Variable Adjustment (4 Columns) -->
+        <section class="lg:col-span-4 flex flex-col gap-4">
+            
+            <!-- Patient / Test Target Selector -->
+            <div class="glass-panel rounded-2xl p-4 shadow-xl">
+                <div class="flex items-center justify-between mb-3">
+                    <h2 class="text-sm font-semibold text-rose-400 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-user-ninja"></i> ชนิดแอนติบอดีที่จำลอง (Target Antibody Profile)
+                    </h2>
+                    <span id="antibody-type-badge" class="px-2 py-0.5 text-xs rounded-full bg-blood-900/60 text-rose-300 border border-blood-700">
+                        IgM Cold Agglutinin
+                    </span>
+                </div>
+                <select id="select-antibody-profile" class="w-full bg-slate-900 border border-slate-700 text-slate-200 text-sm rounded-xl p-2.5 focus:ring-2 focus:ring-rose-500 focus:border-rose-500 transition-all cursor-pointer">
+                    <option value="anti-I">Anti-I (Cold Agglutinin - IgM)</option>
+                    <option value="anti-E">Anti-E (Warm Alloantibody - IgG)</option>
+                    <option value="anti-FyA">Anti-Fya (Duffy System - IgG / Enzyme Sensitive)</option>
+                    <option value="anti-K">Anti-K (Kell System - Warm IgG / LISS Enhanced)</option>
+                </select>
+                <p id="antibody-desc" class="text-xs text-slate-400 mt-2 italic bg-slate-950/50 p-2 rounded-lg border border-slate-800">
+                    * Anti-I: มีปฏิกิริยาดีที่สุดที่อุณหภูมิต่ำ (4°C) สามารถเกิดการรวมกลุ่มที่อุณหภูมิห้อง และมักหายไปเมื่ออุ่นที่ 37°C
+                </p>
+            </div>
+
+            <!-- Control Panel Sliders -->
+            <div class="glass-panel rounded-2xl p-5 shadow-xl flex-1 flex flex-col justify-between space-y-5">
+                <div class="border-b border-slate-800 pb-2 flex justify-between items-center">
+                    <h2 class="text-sm font-semibold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-rose-500"></i> แผงควบคุมสภาวะการทดสอบ (Control Panel)
+                    </h2>
+                    <button id="btn-reset-sliders" class="text-xs text-slate-400 hover:text-rose-400 transition-colors">
+                        <i class="fa-solid fa-rotate-left"></i> รีเซ็ตค่า
+                    </button>
+                </div>
+
+                <!-- Slider 1: Antibody Titer -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center text-sm">
+                        <label for="slider-titer" class="font-medium text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-flask text-slate-400"></i> ความเข้มข้น Antibody (Titer)
+                        </label>
+                        <span id="val-titer" class="text-rose-400 font-bold bg-slate-900 px-2.5 py-0.5 rounded-md border border-slate-800">1:64</span>
+                    </div>
+                    <input type="range" id="slider-titer" min="0" max="8" step="1" value="6" 
+                           class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-rose-500">
+                    <div class="flex justify-between text-[10px] text-slate-500 px-1 font-mono">
+                        <span>0 (Negative)</span>
+                        <span>1:4</span>
+                        <span>1:16</span>
+                        <span>1:64</span>
+                        <span>1:256</span>
+                    </div>
+                </div>
+
+                <!-- Slider 2: Incubation Temperature -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center text-sm">
+                        <label for="slider-temp" class="font-medium text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-temperature-half text-amber-400"></i> อุณหภูมิบ่ม (Temperature)
+                        </label>
+                        <span id="val-temp" class="text-amber-400 font-bold bg-slate-900 px-2.5 py-0.5 rounded-md border border-slate-800">22°C</span>
+                    </div>
+                    <input type="range" id="slider-temp" min="4" max="37" step="1" value="22" 
+                           class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-amber-500">
+                    <div class="flex justify-between text-[10px] text-slate-500 px-1 font-mono">
+                        <span>4°C (Cold)</span>
+                        <span>22°C (RT)</span>
+                        <span>30°C</span>
+                        <span>37°C (Warm)</span>
+                    </div>
+                </div>
+
+                <!-- Slider 3: Incubation Time -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center text-sm">
+                        <label for="slider-time" class="font-medium text-slate-300 flex items-center gap-2">
+                            <i class="fa-solid fa-stopwatch text-cyan-400"></i> ระยะเวลาบ่ม (Incubation Time)
+                        </label>
+                        <span id="val-time" class="text-cyan-400 font-bold bg-slate-900 px-2.5 py-0.5 rounded-md border border-slate-800">15 นาที</span>
+                    </div>
+                    <input type="range" id="slider-time" min="0" max="45" step="5" value="15" 
+                           class="w-full h-2 bg-slate-800 rounded-lg appearance-none cursor-pointer accent-cyan-500">
+                    <div class="flex justify-between text-[10px] text-slate-500 px-1 font-mono">
+                        <span>0 นาที</span>
+                        <span>15 นาที</span>
+                        <span>30 นาที</span>
+                        <span>45 นาที</span>
+                    </div>
+                </div>
+
+                <!-- Media Toggles / Reagent Modifiers -->
+                <div class="pt-2 border-t border-slate-800/80 space-y-3">
+                    <span class="text-xs font-semibold text-slate-400 uppercase tracking-wider block">น้ำยาเสริมปฏิกิริยา (Enhancement Media)</span>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <!-- Toggle LISS -->
+                        <label class="flex items-center space-x-2 bg-slate-900 p-2.5 rounded-xl border border-slate-800 cursor-pointer hover:border-slate-700 transition-all">
+                            <input type="checkbox" id="toggle-liss" class="w-4 h-4 text-rose-600 rounded bg-slate-800 border-slate-700 focus:ring-rose-500">
+                            <span class="text-xs text-slate-300 font-medium">LISS Media</span>
+                        </label>
+
+                        <!-- Toggle Enzyme -->
+                        <label class="flex items-center space-x-2 bg-slate-900 p-2.5 rounded-xl border border-slate-800 cursor-pointer hover:border-slate-700 transition-all">
+                            <input type="checkbox" id="toggle-enzyme" class="w-4 h-4 text-rose-600 rounded bg-slate-800 border-slate-700 focus:ring-rose-500">
+                            <span class="text-xs text-slate-300 font-medium">Proteolytic Enzyme</span>
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Live Quick Summary -->
+                <div class="bg-slate-950 rounded-xl p-3 border border-slate-800 flex justify-around text-center">
+                    <div>
+                        <div class="text-[10px] text-slate-400">Agglutination Grade</div>
+                        <div id="summary-grade" class="text-lg font-extrabold text-rose-500">3+</div>
+                    </div>
+                    <div class="border-r border-slate-800"></div>
+                    <div>
+                        <div class="text-[10px] text-slate-400">Score Point</div>
+                        <div id="summary-score" class="text-lg font-extrabold text-amber-400">10 / 12</div>
+                    </div>
+                    <div class="border-r border-slate-800"></div>
+                    <div>
+                        <div class="text-[10px] text-slate-400">Hemolysis Risk</div>
+                        <div id="summary-risk" class="text-lg font-extrabold text-emerald-400">Low</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CENTER & RIGHT PANEL: Simulation Display, Tabs & Analysis (8 Columns) -->
+        <section class="lg:col-span-8 flex flex-col gap-4">
+            
+            <!-- Navigation Tabs -->
+            <div class="glass-panel rounded-xl p-1.5 flex space-x-1 border border-slate-800">
+                <button id="tab-btn-visualizer" class="tab-btn active flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2 bg-blood-600 text-white shadow-md">
+                    <i class="fa-solid fa-microscope"></i> 1) Tube & Microscopic Visualizer
+                </button>
+                <button id="tab-btn-panel" class="tab-btn flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i class="fa-solid fa-table-cells"></i> 2) Panel Cell Matrix
+                </button>
+                <button id="tab-btn-case" class="tab-btn flex-1 py-2 px-3 rounded-lg text-xs font-semibold transition-all flex items-center justify-center gap-2 text-slate-400 hover:text-white hover:bg-slate-800">
+                    <i class="fa-solid fa-file-medical"></i> 3) Clinical Case Profile
+                </button>
+            </div>
+
+            <!-- TAB CONTENT 1: Visualizer -->
+            <div id="tab-content-visualizer" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
+                    <!-- Canvas 1: Test Tube Visualizer -->
+                    <div class="glass-panel rounded-2xl p-4 flex flex-col items-center justify-between min-h-[340px] relative overflow-hidden">
+                        <div class="w-full flex justify-between items-center mb-2 z-10">
+                            <span class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                                <i class="fa-solid fa-vial text-rose-500"></i> Macroscopic (Serology Test Tube)
+                            </span>
+                            <span id="tube-status-tag" class="text-[10px] bg-rose-950 text-rose-300 border border-rose-800 px-2 py-0.5 rounded-full font-mono">
+                                Clear Clumps (3+)
+                            </span>
+                        </div>
+
+                        <!-- Canvas Container -->
+                        <div class="relative w-full h-[250px] flex items-center justify-center">
+                            <canvas id="canvas-tube" width="220" height="240" class="max-w-full h-auto"></canvas>
+                        </div>
+
+                        <div class="text-[11px] text-slate-400 text-center z-10">
+                            ลักษณะปฏิกิริยาที่มองเห็นด้วยตาเปล่าในหลอดทดลอง
+                        </div>
+                    </div>
+
+                    <!-- Canvas 2: Microscopic View -->
+                    <div class="glass-panel rounded-2xl p-4 flex flex-col items-center justify-between min-h-[340px] relative overflow-hidden">
+                        <div class="w-full flex justify-between items-center mb-2 z-10">
+                            <span class="text-xs font-semibold text-slate-300 flex items-center gap-1.5">
+                                <i class="fa-solid fa-circle-dot text-cyan-400"></i> Microscopic View (40x Magnification)
+                            </span>
+                            <span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-mono">
+                                Simulated RBC Optics
+                            </span>
+                        </div>
+
+                        <!-- Canvas Microscope -->
+                        <div class="relative w-full h-[250px] flex items-center justify-center">
+                            <div class="w-56 h-56 rounded-full border-4 border-slate-700 bg-slate-950 overflow-hidden shadow-2xl relative">
+                                <canvas id="canvas-micro" width="224" height="224"></canvas>
+                                <!-- Microscope Reticle Crosshair overlay -->
+                                <div class="absolute inset-0 border border-slate-800/40 rounded-full pointer-events-none"></div>
+                                <div class="absolute top-1/2 left-0 w-full h-[1px] bg-cyan-500/10 pointer-events-none"></div>
+                                <div class="absolute top-0 left-1/2 w-[1px] h-full bg-cyan-500/10 pointer-events-none"></div>
+                            </div>
+                        </div>
+
+                        <div class="text-[11px] text-slate-400 text-center z-10">
+                            ลักษณะการเกาะกลุ่มของ RBCs ใต้กล้องจุลทรรศน์
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Real-Time Immunological Explanation Box -->
+                <div class="glass-panel rounded-2xl p-5 border-l-4 border-l-rose-500 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h3 class="text-sm font-bold text-slate-200 flex items-center gap-2">
+                            <i class="fa-solid fa-brain text-rose-400"></i> คำอธิบายกลไกทางภูมิคุ้มกันวิทยา (Immunological Mechanism)
+                        </h3>
+                        <span id="reaction-phase-badge" class="text-xs px-2.5 py-1 rounded-md bg-slate-800 text-amber-300 border border-slate-700">
+                            Phase: Room Temp / Immediate Spin
+                        </span>
+                    </div>
+                    <p id="mechanism-text" class="text-xs leading-relaxed text-slate-300">
+                        กำลังคำนวณสภาวะ...
+                    </p>
+                    
+                    <!-- Formula & Metrics Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+                        <div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
+                            <div class="text-[10px] text-slate-400">Agglutination Score Index</div>
+                            <div id="calc-score-formula" class="text-xs font-mono font-bold text-rose-400 mt-1">
+                                Score = Titer(6) + TempFactor(1.2)
+                            </div>
+                        </div>
+                        <div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
+                            <div class="text-[10px] text-slate-400">Transfusion Hemolysis Risk</div>
+                            <div id="calc-risk-index" class="text-xs font-mono font-bold text-amber-400 mt-1">
+                                Risk Index: 15.2% (Moderate)
+                            </div>
+                        </div>
+                        <div class="bg-slate-950/70 p-3 rounded-xl border border-slate-800/80">
+                            <div class="text-[10px] text-slate-400">คำแนะนำยูนิตเลือด (Blood Unit Strategy)</div>
+                            <div id="calc-blood-recommend" class="text-xs font-semibold text-emerald-400 mt-1">
+                                Pre-warmed Unit / Warm Wash
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB CONTENT 2: Panel Cell Matrix -->
+            <div id="tab-content-panel" class="hidden glass-panel rounded-2xl p-5 space-y-4">
+                <div class="flex justify-between items-center">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-200">11-Cell Panel Identification Matrix</h3>
+                        <p class="text-xs text-slate-400">ผลการทดสอบ Panel Cell ภายใต้สภาวะตัวแปรปัจจุบัน</p>
+                    </div>
+                    <span class="text-xs bg-blood-950 border border-blood-800 text-rose-300 px-3 py-1 rounded-lg">
+                        Auto-calculated Reactivity
+                    </span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead>
+                            <tr class="bg-slate-950 text-slate-300 border-b border-slate-800">
+                                <th class="p-2 border border-slate-800">Cell #</th>
+                                <th class="p-2 border border-slate-800">D</th>
+                                <th class="p-2 border border-slate-800">C</th>
+                                <th class="p-2 border border-slate-800">E</th>
+                                <th class="p-2 border border-slate-800">c</th>
+                                <th class="p-2 border border-slate-800">e</th>
+                                <th class="p-2 border border-slate-800">K</th>
+                                <th class="p-2 border border-slate-800">Fy<sup>a</sup></th>
+                                <th class="p-2 border border-slate-800">Fy<sup>b</sup></th>
+                                <th class="p-2 border border-slate-800">I</th>
+                                <th class="p-2 border border-slate-800 bg-rose-950/40 text-rose-300">IS Phase</th>
+                                <th class="p-2 border border-slate-800 bg-amber-950/40 text-amber-300">37°C LISS</th>
+                                <th class="p-2 border border-slate-800 bg-purple-950/40 text-purple-300">AHG Phase</th>
+                            </tr>
+                        </thead>
+                        <tbody id="panel-table-body" class="divide-y divide-slate-800 font-mono">
+                            <!-- JS Generated Rows -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="text-[11px] text-slate-400 italic">
+                    * หมายเหตุ: ตารางจะปรับเปลี่ยนเกรดการตกตะกอน (0, 1+, 2+, 3+, 4+) ในแต่ละ Phase ตามการปรับค่า Slider และชนิด Antibody ที่จำลอง
+                </div>
+            </div>
+
+            <!-- TAB CONTENT 3: Clinical Case Profile -->
+            <div id="tab-content-case" class="hidden glass-panel rounded-2xl p-5 space-y-4">
+                <div class="flex items-center space-x-4 border-b border-slate-800 pb-4">
+                    <div class="w-12 h-12 rounded-full bg-slate-800 border-2 border-rose-500 flex items-center justify-center text-rose-400 font-bold text-xl">
+                        <i class="fa-solid fa-hospital-user"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-100">ผู้ป่วย: นางสมศรี มีโชค (HN 64-98214)</h3>
+                        <p class="text-xs text-slate-400">อายุ 62 ปี | วินิจฉัย: Warm Autoimmune Hemolytic Anemia (WAIHA) / Acute Anemia</p>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                        <h4 class="font-bold text-rose-400 flex items-center gap-2">
+                            <i class="fa-solid fa-notes-medical"></i> ประวัติทางคลินิก (Clinical History)
+                        </h4>
+                        <ul class="list-disc list-inside space-y-1 text-slate-300">
+                            <li>เข้ารับการรักษาด้วยอาการอ่อนเพลีย ตัวเหลือง ตาเหลือง (Jaundice)</li>
+                            <li>Hb = 5.2 g/dL, Hct = 16% (ต้องการเลือด PRBC 2 units ด่วน)</li>
+                            <li>ประวัติการตั้งครรภ์ 3 ครั้ง เคยได้รับเลือดเมื่อ 5 ปีที่แล้ว</li>
+                            <li>ผล ABO/Rh Typing: Group O, Rh Positive</li>
+                        </ul>
+                    </div>
+
+                    <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-2">
+                        <h4 class="font-bold text-amber-400 flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation"></i> ปัญหาทางธนาคารเลือด (Blood Bank Dilemma)
+                        </h4>
+                        <p class="text-slate-300 leading-relaxed">
+                            จองเลือด PRBC 2 ยูนิต แต่ทำ Crossmatch ไม่เข้ากันกับเลือดทุกยูนิตในคลัง (Incompatible with all units)
+                            จากการตรวจ Screening Cell พบปฏิกิริยาบวกในทุกหลอด มีความสงสัยว่ามีทั้ง **Cold Autoantibody** และ **Warm Alloantibody (Anti-E)** ร่วมกัน
+                        </p>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-slate-900/80 rounded-xl border border-slate-800">
+                    <h4 class="font-bold text-cyan-400 text-xs mb-2">คำแนะนำสำหรับนักศึกษาในการทดสอบจำลอง:</h4>
+                    <p class="text-xs text-slate-300">
+                        ให้นักศึกษาใช้แผงควบคุมใน Tab 1 เพื่อทดลองปรับอุณหภูมิ (อุ่นที่ 37°C vs 22°C) และการใช้ Enzyme Treatment เพื่อดูว่าสามารถแยกปฏิกิริยาของ Cold Autoantibody ออกจาก Warm Alloantibody ได้อย่างไร
+                    </p>
+                </div>
+            </div>
+
+        </section>
+    </main>
+
+    <!-- CHALLENGE MISSION MODAL -->
+    <div id="modal-mission" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 hidden">
+        <div class="glass-panel w-full max-w-2xl rounded-2xl p-6 shadow-2xl border border-rose-500/30 space-y-5 animate-in fade-in zoom-in duration-200">
+            
+            <div class="flex justify-between items-center border-b border-slate-800 pb-3">
+                <div class="flex items-center space-x-2">
+                    <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
+                        <i class="fa-solid fa-trophy"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-slate-100">ภารกิจท้าทายทางคลินิก (Challenge Mission)</h3>
+                </div>
+                <button id="btn-close-modal" class="text-slate-400 hover:text-white p-1">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <!-- Mission Content Display -->
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 space-y-3">
+                <div class="flex justify-between items-center">
+                    <span id="mission-id" class="text-xs font-bold text-rose-400 uppercase tracking-wider">Mission #1</span>
+                    <span id="mission-difficulty" class="text-[10px] px-2 py-0.5 rounded bg-amber-950 text-amber-300 border border-amber-800">
+                        Difficulty: Moderate
+                    </span>
+                </div>
+                <h4 id="mission-title" class="text-sm font-bold text-slate-200">
+                    ภารกิจ: สลายปฏิกิริยารบกวนจาก Cold Agglutinin (IgM)
+                </h4>
+                <p id="mission-goal" class="text-xs text-slate-300 leading-relaxed">
+                    เป้าหมาย: ปรับตั้งค่าสภาวะการทดสอบ (อุณหภูมิ, สารเสริม, หรือ Titer) เพื่อทำให้ปฏิกิริยา Cold Agglutinin (Anti-I) หายไปกลายเป็น Negative (0) เพื่อให้ตัดปฏิกิริยารบกวนก่อนทำ Crossmatch ได้สำเร็จ!
+                </p>
+                <div class="bg-slate-900 p-3 rounded-lg border border-slate-800/80 text-xs text-slate-400">
+                    <strong class="text-slate-200">เงื่อนไขเป้าหมาย:</strong>
+                    <ul id="mission-criteria" class="list-disc list-inside mt-1 space-y-0.5 text-amber-300 font-mono">
+                        <li>ตั้งค่าเป็น Anti-I</li>
+                        <li>Agglutination Grade ต้องเท่ากับ 0</li>
+                        <li>อุณหภูมิบ่มต้องอยู่ที่ 37°C</li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex justify-between items-center pt-2">
+                <button id="btn-random-mission" class="text-xs text-slate-300 hover:text-white bg-slate-800 hover:bg-slate-700 px-3.5 py-2 rounded-xl transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-shuffle"></i> สุ่มโจทย์ใหม่
+                </button>
+                <button id="btn-check-solution" class="bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-semibold text-xs px-5 py-2.5 rounded-xl shadow-lg transition-all flex items-center gap-2">
+                    <i class="fa-solid fa-check-double"></i> ตรวจคำตอบ (Check Solution)
+                </button>
+            </div>
+
+            <!-- Solution Feedback Result Box -->
+            <div id="mission-feedback" class="hidden p-3 rounded-xl text-xs font-medium border">
+                <!-- JS Inject -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-slate-950 border-t border-slate-800 text-center py-3 text-xs text-slate-500 mt-auto">
+        <p>© 2026 Interactive Transfusion Science Virtual Lab | คณะสหเวชศาสตร์ สาขาวิชาเทคนิคการแพทย์</p>
+    </footer>
+
+    <!-- JAVASCRIPT LOGIC & SIMULATION ENGINE -->
+    <script>
+        // --- DATA & STATE MANAGEMENT ---
+        const state = {
+            antibody: 'anti-I', // 'anti-I', 'anti-E', 'anti-FyA', 'anti-K'
+            titerIndex: 6,      // 0 to 8 (1:1 to 1:256)
+            titerValues: [0, 1, 2, 4, 8, 16, 64, 128, 256],
+            temp: 22,           // 4 to 37 C
+            time: 15,           // 0 to 45 mins
+            liss: false,
+            enzyme: false,
+            
+            // Calculated outputs
+            agglutinationGrade: '0', // '0', '1+', '2+', '3+', '4+'
+            numericScore: 0,
+            riskIndex: 0,
+            
+            // Current Active Mission
+            currentMissionIndex: 0
+        };
+
+        const antibodyProfiles = {
+            'anti-I': {
+                name: 'Anti-I (Cold Agglutinin)',
+                type: 'IgM',
+                badge: 'IgM Cold Agglutinin',
+                desc: '* Anti-I: มีปฏิกิริยาดีที่สุดที่อุณหภูมิต่ำ (4°C) เกิดการรวมกลุ่มที่อุณหภูมิห้อง (22°C) และจะสลายไปเมื่ออุ่นที่ 37°C',
+                optimumTemp: 4,
+                tempSensitivity: 'cold', // Strong at low temp, disappears at 37
+                enzymeEffect: 'enhance', // Enzymes enhance I antigen
+                baseScore: 10
+            },
+            'anti-E': {
+                name: 'Anti-E (Rh System)',
+                type: 'IgG',
+                badge: 'IgG Warm Alloantibody',
+                desc: '* Anti-E: เป็น Warm Alloantibody (IgG) ทำปฏิกิริยาได้ดีที่สุดที่ 37°C และถูกเสริมปฏิกิริยาได้ดีมากด้วย Proteolytic Enzymes',
+                optimumTemp: 37,
+                tempSensitivity: 'warm',
+                enzymeEffect: 'enhance',
+                baseScore: 12
+            },
+            'anti-FyA': {
+                name: 'Anti-Fya (Duffy System)',
+                type: 'IgG',
+                badge: 'IgG Enzyme-Sensitive',
+                desc: '* Anti-Fya: ทำปฏิกิริยาดีที่ 37°C (AHG Phase) แต่จะถูก **ทำลาย (Destroyed)** โดย Proteolytic Enzyme เช่น Ficin/Papain',
+                optimumTemp: 37,
+                tempSensitivity: 'warm',
+                enzymeEffect: 'destroy', // Enzymes destroy Fya antigens!
+                baseScore: 11
+            },
+            'anti-K': {
+                name: 'Anti-K (Kell System)',
+                type: 'IgG',
+                badge: 'IgG LISS-Enhanced',
+                desc: '* Anti-K: ทำปฏิกิริยาดีที่ 37°C ไม่ได้รับผลกระทบจาก Enzyme มากนัก แต่ตอบสนองดีมากต่อ LISS Enhancement Media',
+                optimumTemp: 37,
+                tempSensitivity: 'warm',
+                enzymeEffect: 'neutral',
+                baseScore: 11
+            }
+        };
+
+        const missions = [
+            {
+                id: "Mission #1",
+                difficulty: "Easy",
+                title: "สลายปฏิกิริยารบกวนจาก Cold Agglutinin (Anti-I)",
+                goal: "ปรับสภาวะการทดสอบเพื่อขจัดปฏิกิริยาของ Anti-I ให้เป็น Negative (0) ก่อนส่งเลือดทำ Crossmatch",
+                criteriaText: ["เลือกแอนติบอดี: Anti-I", "ตั้งอุณหภูมิบ่ม: 37°C", "เกรดการตกตะกอนต้องเท่ากับ: 0"],
+                check: () => state.antibody === 'anti-I' && state.temp >= 35 && state.agglutinationGrade === '0'
+            },
+            {
+                id: "Mission #2",
+                difficulty: "Moderate",
+                title: "จำลองปฏิกิริยา Anti-E ให้ได้ Agglutination Grade 4+ สูงสุด",
+                goal: "ปรับอุณหภูมิ เวลา และใช้น้ำยาเสริมปฏิกิริยาที่เหมาะสมเพื่อให้เกิดการรวมกลุ่ม 4+ ชัดเจนที่สุด",
+                criteriaText: ["เลือกแอนติบอดี: Anti-E", "เปิดใช้งาน Proteolytic Enzyme", "อุณหภูมิบ่ม: 37°C", "ผลการทดสอบต้องได้: 4+"],
+                check: () => state.antibody === 'anti-E' && state.enzyme && state.temp >= 35 && state.agglutinationGrade === '4+'
+            },
+            {
+                id: "Mission #3",
+                difficulty: "Hard",
+                title: "แยกแยะ Duffy Anti-Fya จาก Enzyme Treatment",
+                goal: "พิสูจน์คุณสมบัติของ Anti-Fya ว่าจะ **ไม่เกิดปฏิกิริยา (0)** เมื่อถูกย่อยด้วย Proteolytic Enzyme ที่ 37°C",
+                criteriaText: ["เลือกแอนติบอดี: Anti-Fya", "เปิดใช้งาน Proteolytic Enzyme", "อุณหภูมิบ่ม: 37°C", "เกรดการตกตะกอนต้องลดลงเหลือ: 0"],
+                check: () => state.antibody === 'anti-FyA' && state.enzyme && state.temp >= 30 && state.agglutinationGrade === '0'
+            }
+        ];
+
+        // --- DOM ELEMENTS ---
+        const elements = {
+            selectAntibody: document.getElementById('select-antibody-profile'),
+            antibodyBadge: document.getElementById('antibody-type-badge'),
+            antibodyDesc: document.getElementById('antibody-desc'),
+            
+            sliderTiter: document.getElementById('slider-titer'),
+            sliderTemp: document.getElementById('slider-temp'),
+            sliderTime: document.getElementById('slider-time'),
+            valTiter: document.getElementById('val-titer'),
+            valTemp: document.getElementById('val-temp'),
+            valTime: document.getElementById('val-time'),
+            
+            toggleLiss: document.getElementById('toggle-liss'),
+            toggleEnzyme: document.getElementById('toggle-enzyme'),
+            btnReset: document.getElementById('btn-reset-sliders'),
+            
+            summaryGrade: document.getElementById('summary-grade'),
+            summaryScore: document.getElementById('summary-score'),
+            summaryRisk: document.getElementById('summary-risk'),
+            
+            tubeStatusTag: document.getElementById('tube-status-tag'),
+            mechanismText: document.getElementById('mechanism-text'),
+            reactionPhaseBadge: document.getElementById('reaction-phase-badge'),
+            
+            calcScoreFormula: document.getElementById('calc-score-formula'),
+            calcRiskIndex: document.getElementById('calc-risk-index'),
+            calcBloodRecommend: document.getElementById('calc-blood-recommend'),
+            
+            canvasTube: document.getElementById('canvas-tube'),
+            canvasMicro: document.getElementById('canvas-micro'),
+            
+            panelTableBody: document.getElementById('panel-table-body'),
+            
+            // Modal Elements
+            btnOpenMission: document.getElementById('btn-open-mission'),
+            btnCloseModal: document.getElementById('btn-close-modal'),
+            modalMission: document.getElementById('modal-mission'),
+            missionId: document.getElementById('mission-id'),
+            missionDifficulty: document.getElementById('mission-difficulty'),
+            missionTitle: document.getElementById('mission-title'),
+            missionGoal: document.getElementById('mission-goal'),
+            missionCriteria: document.getElementById('mission-criteria'),
+            btnRandomMission: document.getElementById('btn-random-mission'),
+            btnCheckSolution: document.getElementById('btn-check-solution'),
+            missionFeedback: document.getElementById('mission-feedback')
+        };
+
+        // --- CALCULATION ENGINE ---
+        function calculateReaction() {
+            const profile = antibodyProfiles[state.antibody];
+            const currentTiter = state.titerValues[state.titerIndex];
+            
+            if (currentTiter === 0) {
+                state.numericScore = 0;
+                state.agglutinationGrade = '0';
+                state.riskIndex = 0;
+                return;
+            }
+
+            let score = 0;
+            // Base score from titer index (0 - 8)
+            score += state.titerIndex * 1.5;
+
+            // Temperature Factor
+            if (profile.tempSensitivity === 'cold') {
+                // Strong at 4°C, drops drastically as temp goes to 37°C
+                if (state.temp <= 10) score += 5;
+                else if (state.temp <= 24) score += 2;
+                else if (state.temp <= 30) score -= 2;
+                else if (state.temp >= 35) score -= 10; // Disappears at 37
+            } else if (profile.tempSensitivity === 'warm') {
+                // Weak at cold, optimum at 37°C
+                if (state.temp >= 35) score += 4;
+                else if (state.temp >= 20) score += 1;
+                else score -= 3;
+            }
+
+            // Time Factor (Incubation)
+            if (state.time > 0) {
+                score += Math.min(state.time / 10, 3);
+            }
+
+            // LISS Media Factor
+            if (state.liss) {
+                score += 2.5;
+            }
+
+            // Enzyme Factor
+            if (state.enzyme) {
+                if (profile.enzymeEffect === 'enhance') score += 4;
+                else if (profile.enzymeEffect === 'destroy') score -= 12; // Destroys antigen!
+            }
+
+            // Clamp score
+            state.numericScore = Math.max(0, Math.min(15, score));
+
+            // Map score to Agglutination Grade
+            if (state.numericScore <= 1) state.agglutinationGrade = '0';
+            else if (state.numericScore <= 4) state.agglutinationGrade = '1+';
+            else if (state.numericScore <= 7) state.agglutinationGrade = '2+';
+            else if (state.numericScore <= 11) state.agglutinationGrade = '3+';
+            else state.agglutinationGrade = '4+';
+
+            // Calculate Transfusion Hemolysis Risk Percentage
+            if (profile.tempSensitivity === 'cold' && state.temp >= 35) {
+                state.riskIndex = (state.numericScore * 2).toFixed(1);
+            } else {
+                state.riskIndex = (state.numericScore * 6.5).toFixed(1);
+            }
+            state.riskIndex = Math.min(99.9, Math.max(0, state.riskIndex));
+        }
+
+        // --- RENDER & UI UPDATES ---
+        function updateUI() {
+            calculateReaction();
+
+            const profile = antibodyProfiles[state.antibody];
+            elements.antibodyBadge.textContent = profile.badge;
+            elements.antibodyDesc.textContent = profile.desc;
+
+            // Sliders Display
+            elements.valTiter.textContent = state.titerValues[state.titerIndex] === 0 ? '0 (Neg)' : `1:${state.titerValues[state.titerIndex]}`;
+            elements.valTemp.textContent = `${state.temp}°C`;
+            elements.valTime.textContent = `${state.time} นาที`;
+
+            // Summary Box
+            elements.summaryGrade.textContent = state.agglutinationGrade;
+            elements.summaryScore.textContent = `${state.numericScore.toFixed(1)} / 15`;
+            
+            // Risk Level Display
+            if (state.riskIndex < 20) {
+                elements.summaryRisk.textContent = 'Low';
+                elements.summaryRisk.className = 'text-lg font-extrabold text-emerald-400';
+            } else if (state.riskIndex < 60) {
+                elements.summaryRisk.textContent = 'Moderate';
+                elements.summaryRisk.className = 'text-lg font-extrabold text-amber-400';
+            } else {
+                elements.summaryRisk.textContent = 'High';
+                elements.summaryRisk.className = 'text-lg font-extrabold text-rose-500 animate-pulse';
+            }
+
+            // Tube Tag
+            elements.tubeStatusTag.textContent = `Grade ${state.agglutinationGrade} (${getGradeDescription(state.agglutinationGrade)})`;
+
+            // Explanation Text
+            updateMechanismExplanation();
+
+            // Formulas & Metrics
+            elements.calcScoreFormula.textContent = `Score = TiterIdx(${state.titerIndex}) + TempMod + Media`;
+            elements.calcRiskIndex.textContent = `Risk Index: ${state.riskIndex}% (${elements.summaryRisk.textContent})`;
+            elements.calcBloodRecommend.textContent = getBloodRecommendation();
+
+            // Render Canvases
+            renderTubeCanvas();
+            renderMicroscopeCanvas();
+
+            // Update Panel Table Matrix if visible
+            renderPanelTable();
+        }
+
+        function getGradeDescription(grade) {
+            switch(grade) {
+                case '4+': return 'Solid Red Cell Button';
+                case '3+': return 'Clear Clumps / Clear Background';
+                case '2+': return 'Medium Clumps / Turbid';
+                case '1+': return 'Fine Granular Clumps';
+                default: return 'Smooth Suspension (Negative)';
+            }
+        }
+
+        function getBloodRecommendation() {
+            if (state.antibody === 'anti-I') {
+                if (state.temp >= 35 && state.agglutinationGrade === '0') {
+                    return "ใช้เลือด PRBC ทั่วไปได้ + Pre-warmed Blood Warmer 37°C";
+                } else {
+                    return "เสี่ยงเกิด Cold Agglutination! ต้องใช้ Pre-warm Technique";
+                }
+            } else if (state.antibody === 'anti-E') {
+                return "ต้องเลือก Antigen-E Negative Blood Unit + Crossmatch เข้ากัน";
+            } else if (state.antibody === 'anti-FyA') {
+                return "ต้องเลือก Antigen-Fya Negative Blood Unit + AHG Crossmatch";
+            } else {
+                return "ต้องเลือก Antigen-K Negative Blood Unit";
+            }
+        }
+
+        function updateMechanismExplanation() {
+            const profile = antibodyProfiles[state.antibody];
+            let explanation = "";
+
+            if (state.temp <= 15) {
+                elements.reactionPhaseBadge.textContent = `Phase: Cold Incubation (${state.temp}°C)`;
+            } else if (state.temp <= 25) {
+                elements.reactionPhaseBadge.textContent = `Phase: Room Temp / Immediate Spin (${state.temp}°C)`;
+            } else {
+                elements.reactionPhaseBadge.textContent = `Phase: 37°C Warm Incubation`;
+            }
+
+            if (profile.tempSensitivity === 'cold') {
+                if (state.temp >= 35) {
+                    explanation = `ขณะนี้อุณหภูมิสูงขึ้นถึง ${state.temp}°C ซึ่งเกินสภาวะ Thermal Range ของ IgM Cold Autoantibody (Anti-I) ทำให้พันธะการจับกับแอนติเจนบนเม็ดเลือดแดงสลายตัว ปฏิกิริยาจึงกลายเป็น Negative (0) ช่วยให้ทำ Crossmatch ได้อย่างปลอดภัย`;
+                } else {
+                    explanation = `Anti-I เป็น IgM Cold Agglutinin ซึ่งสามารถจับกลุ่มเม็ดเลือดแดงได้ดีมากที่อุณหภูมิต่ำ (${state.temp}°C) เนื่องจากโครงสร้าง Pentameric IgM สามารถข้ามระยะ Pentagonal Distance ระหว่าง RBCs ได้ง่าย เกิดปฏิกิริยา Agglutination ระดับ ${state.agglutinationGrade}`;
+                }
+            } else if (profile.tempSensitivity === 'warm') {
+                if (state.antibody === 'anti-FyA' && state.enzyme) {
+                    explanation = `**การทดสอบด้วย Proteolytic Enzyme (Ficin/Papain):** เอ็นไซม์ได้ทำการย่อยและทำลายโครงสร้าง Glycoprotein ของ Fya Antigen บนผิวเม็ดเลือดแดง ส่งผลให้ Anti-Fya ไม่สามารถเข้าจับได้ ปฏิกิริยาจึงลดลงเหลือ 0 แม้ในสภาวะ 37°C`;
+                } else if (state.temp >= 30) {
+                    explanation = `${profile.name} เป็น IgG Warm Antibody ซึ่งต้องการอุณหภูมิ 37°C ในการเกิดปฏิกิริยาจับกับแอนติเจนบนผิว RBCs`;
+                    if (state.liss) explanation += ` การเติม LISS ช่วยลดแรงผลัก Zeta Potential ทำให้ IgG จับได้เร็วขึ้น`;
+                    if (state.enzyme && profile.enzymeEffect === 'enhance') explanation += ` ร่วมกับการใช้ Proteolytic Enzyme ย่อย Sialic Acid ออก เพิ่มการเกิด Agglutination จนได้เกรด ${state.agglutinationGrade}`;
+                } else {
+                    explanation = `${profile.name} จับกับแอนติเจนได้ไม่ดีที่อุณหภูมิต่ำ (${state.temp}°C) เนื่องจากเป็น IgG ต้องการพลังงานความร้อนที่ 37°C เพื่อการจับตัวที่สมบูรณ์`;
+                }
+            }
+
+            elements.mechanismText.innerHTML = explanation;
+        }
+
+        // --- CANVAS RENDERING (ANIMATED GRAPHICS) ---
+        let animationFrameId;
+
+        function renderTubeCanvas() {
+            const canvas = elements.canvasTube;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Draw Test Tube Contour
+            const tubeX = w / 2 - 25;
+            const tubeY = 20;
+            const tubeW = 50;
+            const tubeH = 180;
+            const radius = 25;
+
+            // Fluid Fill Gradient
+            const fluidGradient = ctx.createLinearGradient(tubeX, tubeY + 50, tubeX, tubeY + tubeH);
+            
+            if (state.agglutinationGrade === '0') {
+                // Smooth suspension (homogenous red)
+                fluidGradient.addColorStop(0, 'rgba(225, 29, 72, 0.4)');
+                fluidGradient.addColorStop(1, 'rgba(190, 18, 60, 0.7)');
+            } else {
+                // Clear supernatant background for strong agglutination
+                fluidGradient.addColorStop(0, 'rgba(241, 245, 249, 0.15)');
+                fluidGradient.addColorStop(0.8, 'rgba(241, 245, 249, 0.25)');
+                fluidGradient.addColorStop(1, 'rgba(159, 18, 57, 0.8)');
+            }
+
+            // Draw Tube Liquid
+            ctx.beginPath();
+            ctx.moveTo(tubeX, tubeY + 40);
+            ctx.lineTo(tubeX, tubeY + tubeH - radius);
+            ctx.arcTo(tubeX, tubeY + tubeH, tubeX + radius, tubeY + tubeH, radius);
+            ctx.arcTo(tubeX + tubeW, tubeY + tubeH, tubeX + tubeW, tubeY + tubeH - radius, radius);
+            ctx.lineTo(tubeX + tubeW, tubeY + 40);
+            ctx.closePath();
+            ctx.fillStyle = fluidGradient;
+            ctx.fill();
+
+            // Draw Agglutinated Button/Clumps at Bottom
+            ctx.save();
+            if (state.agglutinationGrade === '4+') {
+                // Solid One Big Clump
+                ctx.beginPath();
+                ctx.ellipse(w / 2, tubeY + tubeH - 18, 20, 12, 0, 0, Math.PI * 2);
+                ctx.fillStyle = '#881337';
+                ctx.fill();
+                ctx.strokeStyle = '#e11d48';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+            } else if (state.agglutinationGrade === '3+' || state.agglutinationGrade === '2+') {
+                // Multiple distinct clumps
+                const clumpCount = state.agglutinationGrade === '3+' ? 6 : 12;
+                const size = state.agglutinationGrade === '3+' ? 6 : 4;
+                ctx.fillStyle = '#9f1239';
+                for (let i = 0; i < clumpCount; i++) {
+                    const cx = w / 2 + (Math.sin(i * 1.5) * 14);
+                    const cy = tubeY + tubeH - 15 - (i * 3);
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            } else if (state.agglutinationGrade === '1+') {
+                // Fine granules scattered
+                ctx.fillStyle = '#be123c';
+                for (let i = 0; i < 30; i++) {
+                    const cx = w / 2 + (Math.sin(i * 3) * 18);
+                    const cy = tubeY + tubeH - 10 - (i * 2.5);
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+            ctx.restore();
+
+            // Draw Glass Tube Glass Effect Overlay
+            ctx.beginPath();
+            ctx.moveTo(tubeX, tubeY);
+            ctx.lineTo(tubeX, tubeY + tubeH - radius);
+            ctx.arcTo(tubeX, tubeY + tubeH, tubeX + radius, tubeY + tubeH, radius);
+            ctx.arcTo(tubeX + tubeW, tubeY + tubeH, tubeX + tubeW, tubeY + tubeH - radius, radius);
+            ctx.lineTo(tubeX + tubeW, tubeY);
+            ctx.lineWidth = 3;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.stroke();
+
+            // Highlight reflection on glass
+            ctx.beginPath();
+            ctx.moveTo(tubeX + 6, tubeY + 10);
+            ctx.lineTo(tubeX + 6, tubeY + tubeH - 20);
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            ctx.stroke();
+        }
+
+        // Microscopic RBC Particles
+        let microParticles = [];
+        for (let i = 0; i < 80; i++) {
+            microParticles.push({
+                x: Math.random() * 200 + 12,
+                y: Math.random() * 200 + 12,
+                vx: (Math.random() - 0.5) * 0.3,
+                vy: (Math.random() - 0.5) * 0.3,
+                radius: 6
+            });
+        }
+
+        function renderMicroscopeCanvas() {
+            const canvas = elements.canvasMicro;
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Background Lens Field
+            ctx.fillStyle = '#090d16';
+            ctx.fillRect(0, 0, w, h);
+
+            // Render RBCs based on Agglutination Grade
+            const grade = state.agglutinationGrade;
+
+            if (grade === '0') {
+                // Free floating individual biconcave RBCs
+                microParticles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 10 || p.x > w - 10) p.vx *= -1;
+                    if (p.y < 10 || p.y > h - 10) p.vy *= -1;
+
+                    drawSingleRBC(ctx, p.x, p.y, p.radius);
+                });
+            } else if (grade === '4+' || grade === '3+') {
+                // Massive Clumping / Rouleaux Clusters
+                const clusters = grade === '4+' ? 2 : 5;
+                const centerPoints = [
+                    { x: w / 2, y: h / 2 },
+                    { x: w / 2 - 40, y: h / 2 + 30 },
+                    { x: w / 2 + 40, y: h / 2 - 30 },
+                    { x: w / 2 - 30, y: h / 2 - 40 },
+                    { x: w / 2 + 30, y: h / 2 + 40 }
+                ];
+
+                for (let c = 0; c < clusters; c++) {
+                    const cp = centerPoints[c];
+                    const countInCluster = grade === '4+' ? 35 : 15;
+                    for (let i = 0; i < countInCluster; i++) {
+                        const angle = i * 0.5;
+                        const dist = (i * 1.8);
+                        const rx = cp.x + Math.cos(angle) * dist;
+                        const ry = cp.y + Math.sin(angle) * dist;
+                        drawSingleRBC(ctx, rx, ry, 6.5);
+                    }
+                }
+            } else {
+                // 1+ or 2+ Small scattered clusters
+                for (let i = 0; i < microParticles.length; i++) {
+                    const p = microParticles[i];
+                    // Grouping pull effect
+                    if (i % 4 === 0) {
+                        const targetX = w / 2 + (Math.sin(i) * 50);
+                        const targetY = h / 2 + (Math.cos(i) * 50);
+                        p.x += (targetX - p.x) * 0.02;
+                        p.y += (targetY - p.y) * 0.02;
+                    } else {
+                        p.x += p.vx;
+                        p.y += p.vy;
+                    }
+                    drawSingleRBC(ctx, p.x, p.y, p.radius);
+                }
+            }
+        }
+
+        function drawSingleRBC(ctx, x, y, r) {
+            ctx.save();
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            // Disc Gradient for Biconcave optical illusion
+            const grad = ctx.createRadialGradient(x, y, r * 0.2, x, y, r);
+            grad.addColorStop(0, '#f43f5e'); // Lighter center
+            grad.addColorStop(0.7, '#be123c');
+            grad.addColorStop(1, '#881337'); // Dark rim
+            ctx.fillStyle = grad;
+            ctx.fill();
+            ctx.strokeStyle = '#4c0519';
+            ctx.lineWidth = 0.5;
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        // --- PANEL CELL MATRIX GENERATOR ---
+        function renderPanelTable() {
+            const panelData = [
+                { cell: 'Cell 1', D: '+', C: '+', E: '0', c: '0', e: '+', K: '0', Fya: '+', Fyb: '0', I: '+' },
+                { cell: 'Cell 2', D: '+', C: '0', E: '+', c: '+', e: '0', K: '+', Fya: '0', Fyb: '+', I: '+' },
+                { cell: 'Cell 3', D: '0', C: '0', E: '0', c: '+', e: '+', K: '0', Fya: '+', Fyb: '+', I: '+' },
+                { cell: 'Cell 4', D: '0', C: '+', E: '0', c: '+', e: '+', K: '0', Fya: '0', Fyb: '+', I: '+' }
+            ];
+
+            elements.panelTableBody.innerHTML = '';
+
+            panelData.forEach((row, idx) => {
+                let isPhase = '0';
+                let lissPhase = '0';
+                let ahgPhase = '0';
+
+                // Calculate reactive phase based on current antibody and sliders
+                if (state.antibody === 'anti-I') {
+                    if (state.temp <= 25) isPhase = state.agglutinationGrade;
+                    if (state.temp <= 15) lissPhase = state.agglutinationGrade;
+                    ahgPhase = '0';
+                } else if (state.antibody === 'anti-E') {
+                    isPhase = '0';
+                    if (row.E === '+') {
+                        lissPhase = state.temp >= 30 ? '2+' : '0';
+                        ahgPhase = state.agglutinationGrade;
+                    }
+                } else if (state.antibody === 'anti-FyA') {
+                    if (row.Fya === '+') {
+                        ahgPhase = state.enzyme ? '0' : state.agglutinationGrade;
+                    }
+                } else {
+                    if (row.K === '+') {
+                        ahgPhase = state.agglutinationGrade;
+                    }
+                }
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-slate-800/50 transition-colors';
+                tr.innerHTML = `
+                    <td class="p-2 border border-slate-800 font-bold text-slate-200">${row.cell}</td>
+                    <td class="p-2 border border-slate-800 text-center ${row.D === '+' ? 'text-rose-400 font-bold' : 'text-slate-600'}">${row.D}</td>
+                    <td class="p-2 border border-slate-800 text-center ${row.C === '+' ? 'text-rose-400 font-bold' : 'text-slate-600'}">${row.C}</td>
+                    <td class="p-2 border border-slate-800 text-center ${row.E === '+' ? 'text-rose-400 font-bold' : 'text-slate-600'}">${row.E}</td>
+                    <td class="p-2 border border-slate-800 text-center ${row.c === '+' ? 'text-rose-400 font-bold' : 'text-slate-600'}">${row.c}</td>
+                    <td class="p-2 border border-slate-800 text-center ${row.e === '+' ? 'text-rose-400 font-bold' : 'text-slate-600'}">${row.e}</td>
+                    <td class="p-2 border border-slate-800 text-center ${row.K === '+' ? 'text-amber-400 font-bold' : 'text-slate-600'}">${row.K}</td>
+                    <td class="p-2 border border-slate-800 text-center ${row.Fya === '+' ? 'text-cyan-400 font-bold' : 'text-slate-600'}">${row.Fya}</td>
+                    <td class="p-2 border border-slate-800 text-center ${row.Fyb === '+' ? 'text-cyan-400 font-bold' : 'text-slate-600'}">${row.Fyb}</td>
+                    <td class="p-2 border border-slate-800 text-center ${row.I === '+' ? 'text-rose-400 font-bold' : 'text-slate-600'}">${row.I}</td>
+                    <td class="p-2 border border-slate-800 text-center font-bold bg-rose-950/20 text-rose-300">${isPhase}</td>
+                    <td class="p-2 border border-slate-800 text-center font-bold bg-amber-950/20 text-amber-300">${lissPhase}</td>
+                    <td class="p-2 border border-slate-800 text-center font-bold bg-purple-950/20 text-purple-300">${ahgPhase}</td>
+                `;
+                elements.panelTableBody.appendChild(tr);
+            });
+        }
+
+        // --- EVENT LISTENERS ---
+        function setupEventListeners() {
+            // Antibody Select
+            elements.selectAntibody.addEventListener('change', (e) => {
+                state.antibody = e.target.value;
+                updateUI();
+            });
+
+            // Sliders
+            elements.sliderTiter.addEventListener('input', (e) => {
+                state.titerIndex = parseInt(e.target.value);
+                updateUI();
+            });
+            elements.sliderTemp.addEventListener('input', (e) => {
+                state.temp = parseInt(e.target.value);
+                updateUI();
+            });
+            elements.sliderTime.addEventListener('input', (e) => {
+                state.time = parseInt(e.target.value);
+                updateUI();
+            });
+
+            // Toggles
+            elements.toggleLiss.addEventListener('change', (e) => {
+                state.liss = e.target.checked;
+                updateUI();
+            });
+            elements.toggleEnzyme.addEventListener('change', (e) => {
+                state.enzyme = e.target.checked;
+                updateUI();
+            });
+
+            // Reset Button
+            elements.btnReset.addEventListener('click', () => {
+                state.titerIndex = 6;
+                state.temp = 22;
+                state.time = 15;
+                state.liss = false;
+                state.enzyme = false;
+
+                elements.sliderTiter.value = 6;
+                elements.sliderTemp.value = 22;
+                elements.sliderTime.value = 15;
+                elements.toggleLiss.checked = false;
+                elements.toggleEnzyme.checked = false;
+
+                updateUI();
+            });
+
+            // Navigation Tabs
+            const tabs = [
+                { btn: document.getElementById('tab-btn-visualizer'), content: document.getElementById('tab-content-visualizer') },
+                { btn: document.getElementById('tab-btn-panel'), content: document.getElementById('tab-content-panel') },
+                { btn: document.getElementById('tab-btn-case'), content: document.getElementById('tab-content-case') }
+            ];
+
+            tabs.forEach(tab => {
+                tab.btn.addEventListener('click', () => {
+                    tabs.forEach(t => {
+                        t.btn.classList.remove('active', 'bg-blood-600', 'text-white');
+                        t.btn.classList.add('text-slate-400');
+                        t.content.classList.add('hidden');
+                    });
+                    tab.btn.classList.add('active', 'bg-blood-600', 'text-white');
+                    tab.btn.classList.remove('text-slate-400');
+                    tab.content.classList.remove('hidden');
+                });
+            });
+
+            // Mission Modal Handlers
+            elements.btnOpenMission.addEventListener('click', () => {
+                loadMission(state.currentMissionIndex);
+                elements.modalMission.classList.remove('hidden');
+            });
+            elements.btnCloseModal.addEventListener('click', () => {
+                elements.modalMission.classList.add('hidden');
+            });
+            elements.btnRandomMission.addEventListener('click', () => {
+                state.currentMissionIndex = (state.currentMissionIndex + 1) % missions.length;
+                loadMission(state.currentMissionIndex);
+            });
+            elements.btnCheckSolution.addEventListener('click', checkMissionSolution);
+        }
+
+        // --- MISSION ENGINE ---
+        function loadMission(index) {
+            const mission = missions[index];
+            elements.missionId.textContent = mission.id;
+            elements.missionDifficulty.textContent = `Difficulty: ${mission.difficulty}`;
+            elements.missionTitle.textContent = mission.title;
+            elements.missionGoal.textContent = mission.goal;
+
+            elements.missionCriteria.innerHTML = '';
+            mission.criteriaText.forEach(text => {
+                const li = document.createElement('li');
+                li.textContent = text;
+                elements.missionCriteria.appendChild(li);
+            });
+
+            elements.missionFeedback.classList.add('hidden');
+        }
+
+        function checkMissionSolution() {
+            const currentMission = missions[state.currentMissionIndex];
+            const isPassed = currentMission.check();
+
+            elements.missionFeedback.classList.remove('hidden');
+
+            if (isPassed) {
+                elements.missionFeedback.className = 'p-3 rounded-xl text-xs font-semibold bg-emerald-950/80 text-emerald-300 border border-emerald-700 space-y-1';
+                elements.missionFeedback.innerHTML = `
+                    <div class="flex items-center gap-2 text-sm text-emerald-400">
+                        <i class="fa-solid fa-circle-check text-lg"></i>
+                        <span>ยินดีด้วย! ยอดเยี่ยมมาก คุณผ่านภารกิจนี้แล้ว (Mission Accomplished!)</span>
+                    </div>
+                    <p class="font-normal text-slate-300">คุณสามารถปรับสภาวะการทดสอบได้ถูกต้องตามหลักภูมิคุ้มกันวิทยาธนาคารเลือดอย่างแม่นยำ!</p>
+                `;
+            } else {
+                elements.missionFeedback.className = 'p-3 rounded-xl text-xs font-semibold bg-rose-950/80 text-rose-300 border border-rose-700 space-y-1';
+                elements.missionFeedback.innerHTML = `
+                    <div class="flex items-center gap-2 text-sm text-rose-400">
+                        <i class="fa-solid fa-circle-xmark text-lg"></i>
+                        <span>ยังไม่ผ่านภารกิจ! (Solution Incorrect)</span>
+                    </div>
+                    <p class="font-normal text-slate-300">ลองตรวจสอบชนิด Antibody, อุณหภูมิบ่ม หรือน้ำยาเสริมที่ใช้ แล้วทดลองปรับค่า Slider ใหม่อีกครั้ง</p>
+                `;
+            }
+        }
+
+        // Continuous Loop for Particle Animation
+        function animationLoop() {
+            renderMicroscopeCanvas();
+            renderTubeCanvas();
+            requestAnimationFrame(animationLoop);
+        }
+
+        // Initialize on Window Load
+        window.onload = function() {
+            setupEventListeners();
+            updateUI();
+            animationLoop();
+        };
+    </script>
+</body>
+</html>
